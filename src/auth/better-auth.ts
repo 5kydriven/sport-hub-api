@@ -1,7 +1,7 @@
 // auth/better-auth.ts
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { bearer } from 'better-auth/plugins';
+import { bearer, openAPI } from 'better-auth/plugins';
 import type { Database } from '@/db/client';
 import type { Env } from '@/env';
 import * as schema from '../db/schema';
@@ -44,6 +44,10 @@ export function createAuth(env: Env, db: Database) {
 			// THE critical plugin: accept `Authorization: Bearer <session-token>`
 			// in addition to cookies. Required for mobile and CLI clients.
 			bearer(),
+			// Exposes `auth.api.generateOpenAPISchema()`, which core/http/openapi
+			// merges into the single /openapi.json. The plugin's own reference
+			// page is disabled — one docs surface, not two.
+			openAPI({ disableDefaultReference: true }),
 		],
 	});
 }
