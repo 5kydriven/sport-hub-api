@@ -1,0 +1,39 @@
+{
+	"name": "sport-api",
+	"type": "module",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy --minify",
+		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
+		"db:generate": "bun drizzle-kit generate",
+		"db:migrate": "bun drizzle-kit migrate",
+		"db:studio": "bun drizzle-kit studio",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@better-auth/drizzle-adapter": "^1.6.25",
+		"@hono/swagger-ui": "^0.6.1",
+		"@hono/zod-openapi": "^1.5.1",
+		"@neondatabase/serverless": "^1.1.0",
+		"@scalar/hono-api-reference": "^0.11.11",
+		"better-auth": "^1.6.25",
+		"drizzle-orm": "^0.45.2",
+		"drizzle-zod": "^0.8.3",
+		"hono": "^4.12.32",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@better-auth/cli": "^1.4.21",
+		"@cloudflare/workers-types": "^5.20260729.1",
+		"@types/node": "^26.1.2",
+		"drizzle-kit": "^0.31.10",
+		"eslint": "^10.8.0",
+		"eslint-import-resolver-typescript": "^4.4.5",
+		"eslint-plugin-check-file": "^3.3.2",
+		"eslint-plugin-import": "^2.32.0",
+		"jiti": "^2.7.0",
+		"typescript": "^6.0.0",
+		"typescript-eslint": "^8.65.0",
+		"wrangler": "^4.110.0"
+	}
+}

@@ -1,0 +1,59 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "sport-api",
+	"main": "src/app.ts",
+	"compatibility_date": "2026-07-25",
+	"compatibility_flags": ["nodejs_compat"],
+	"keep_vars": true,
+	"dev": {
+		"port": 3000,
+	},
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1,
+		"logs": {
+			"enabled": true,
+			"head_sampling_rate": 1,
+			"persist": true,
+			"invocation_logs": true,
+		},
+		"traces": {
+			"enabled": true,
+			"persist": true,
+			"head_sampling_rate": 1,
+		},
+	},
+	// "kv_namespaces": [
+	// 	{
+	// 		"binding": "RATE_LIMIT_KV",
+	// 		"id": "...",
+	// 	},
+	// 	{
+	// 		"binding": "IDEMPOTENCY_KV",
+	// 		"id": "...",
+	// 	},
+	// ],
+	"env": {
+		"staging": {
+			"name": "sport-api-staging",
+			// Keys must match EnvSchema in src/env.ts exactly. `ENVIRONMENT`
+			// is the name the schema validates; "staging" is not one of its
+			// accepted values, so preview is the correct tier here.
+			"vars": {
+				"ENVIRONMENT": "preview",
+				"BETTER_AUTH_URL": "http://localhost:3000",
+				"LOG_LEVEL": "info",
+				"CORS_ORIGINS": "http://localhost:3000",
+			},
+		},
+	},
+	// "r2_buckets": [
+	//   {
+	//     "binding": "MY_BUCKET",
+	//     "bucket_name": "my-bucket"
+	//   }
+	// ],
+	// "ai": {
+	//   "binding": "AI"
+	// },
+}
