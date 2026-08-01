@@ -3,19 +3,14 @@ import { UnauthorizedError } from '@/core/errors';
 import type { AppEnv } from '@/core/types';
 import type { Principal } from '@/auth/principal';
 import { Context } from 'hono';
-/**
- * Extracts `Bearer <token>` per RFC 6750 §2.1.
- * Case-insensitive scheme, exactly one space.
- */
-function extractBearer(header: string | undefined): string | null {
-	if (!header) return null;
-	const match = /^Bearer\s+(.+)$/i.exec(header.trim());
-	return match?.[1] ?? null;
-}
 async function resolvePrincipal(c: Context<AppEnv>): Promise<Principal | null> {
 	const { auth } = c.get('container');
-	// const token = extractBearer(c.req.header('Authorization'));
 	// --- Path 1: API key (machine caller) ---
+	// Deferred with the rest of the API-key work (§9). Reinstating it also means
+	// reinstating an `extractBearer` helper — `Bearer <token>` per RFC 6750 §2.1,
+	// case-insensitive scheme, exactly one space. It was removed rather than left
+	// dead; `git log` has it.
+	// const token = extractBearer(c.req.header('Authorization'));
 	// if (token?.startsWith('sk_')) {
 	// 	return services.apiKey.verify(token);
 	// }

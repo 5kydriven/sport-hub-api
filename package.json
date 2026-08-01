@@ -8,7 +8,9 @@
 		"db:generate": "bun drizzle-kit generate",
 		"db:migrate": "bun drizzle-kit migrate",
 		"db:studio": "bun drizzle-kit studio",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"lint": "eslint src",
+		"check": "bun run typecheck && bun run lint"
 	},
 	"dependencies": {
 		"@better-auth/drizzle-adapter": "^1.6.25",

@@ -6,7 +6,7 @@ import { accessLog } from '@/core/middleware/logger';
 import { containerMiddleware } from '@/core/middleware/container';
 import { errorHandler, notFoundHandler } from '@/core/middleware/error-handler';
 import { authRouter } from '@/auth/routes';
-import { userRoutes } from '@/modules/user/user.routes';
+import { userRoutes } from '@/modules/user';
 import { corsMiddleware } from '@/core/middleware/cors';
 import {
 	securityHeaders,
@@ -42,13 +42,20 @@ registerOpenApi(app);
 app.get(
 	'/docs',
 	docsSecurityHeaders,
-	Scalar((c) => ({
-		url: '/openapi.json',
-		pageTitle: 'Sport API',
+	Scalar((c) => {
 		// Stamps every tag the renderer emits, satisfying the docs CSP without
-		// resorting to script-src 'unsafe-inline'.
-		nonce: c.get('secureHeadersNonce'),
-	})),
+		// resorting to script-src 'unsafe-inline'. `docsSecurityHeaders` runs
+		// immediately above and mints it, so it is always set here — but the
+		// context var is typed optional because Hono cannot prove the middleware
+		// ran. Spread it in rather than passing `nonce: undefined`, which under
+		// exactOptionalPropertyTypes is not the same as leaving the key absent.
+		const nonce = c.get('secureHeadersNonce');
+		return {
+			url: '/openapi.json',
+			pageTitle: 'Sport API',
+			...(nonce ? { nonce } : {}),
+		};
+	}),
 );
 export default app;
 

@@ -3,7 +3,7 @@ export abstract class AppError extends Error {
 	/** Stable, machine-readable. Clients switch on this, not on `message`. */
 	abstract readonly code: string;
 	/** Safe to serialize to the client. Never contains internals. */
-	readonly details?: Record<string, unknown>;
+	readonly details?: Record<string, unknown> | undefined;
 	constructor(message: string, details?: Record<string, unknown>) {
 		super(message);
 		this.name = new.target.name;

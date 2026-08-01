@@ -6,7 +6,8 @@ import {
 	Paginated,
 } from '@/core/pagination/types';
 import { decodeCursor, toCursorMeta } from '@/core/pagination/helper';
-import { toPublicUser, User } from './user.schema';
+import { toPublicUser, User, UpdateUserInput } from './user.schema';
+import { NotFoundError } from '@/core/errors';
 
 export interface UserServiceDep {
 	userRepo: UserRepository;
@@ -51,8 +52,23 @@ export function makeUserService(deps: UserServiceDep) {
 			};
 		},
 
-		async updateUser(data: unknown) {},
-		async deleteUser(id: string) {},
+		// `null` from the repository is a fact; deciding it means "not found" is
+		// policy, and policy lives one layer up. Note the domain error, not a
+		// transport-layer one — a cron trigger consuming this has no use for a
+		// status code (P5/§7). The edge translates it to 404.
+		async updateUser(id: string, data: UpdateUserInput): Promise<User> {
+			const updated = await userRepo.update(id, data);
+			if (!updated) throw new NotFoundError('User', id);
+			return toPublicUser(updated);
+		},
+
+		// Soft delete, deliberately: `deletedAt` is what every read path filters
+		// on via `notDeleted`, and a hard delete would strip the row out from
+		// under the auth tables that reference it.
+		async deleteUser(id: string): Promise<void> {
+			const deleted = await userRepo.softDelete(id);
+			if (!deleted) throw new NotFoundError('User', id);
+		},
 	};
 }
 

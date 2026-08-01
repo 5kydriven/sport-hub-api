@@ -2,7 +2,8 @@ import { OffsetParams, CursorParams } from '@/core/pagination/types';
 import { Database } from '@/db/client';
 import { UserRow, users } from '@/db/schema';
 import { notDeleted } from '@/db/predicates';
-import { count, desc, or, and, eq, lt, isNull } from 'drizzle-orm';
+import { count, desc, or, and, eq, lt } from 'drizzle-orm';
+import type { UpdateUserInput } from './user.schema';
 
 export function makeUserRepository(db: Database) {
 	return {
@@ -12,8 +13,19 @@ export function makeUserRepository(db: Database) {
 			});
 		},
 
-		async update(id: string, data: unknown) {
-			// TODO
+		async update(id: string, data: UpdateUserInput) {
+			// Guarded by `notDeleted`: a soft-deleted row is not visible to any
+			// other read path, so letting it be updated here would resurrect data
+			// the rest of the module treats as gone. `updatedAt` refreshes itself
+			// via the column's `$onUpdate`.
+			const [updated] = await db
+				.update(users)
+				.set(data)
+				.where(and(eq(users.id, id), notDeleted(users)))
+				.returning();
+
+			// A fact, not a policy. Whether `null` means 404 is the service's call.
+			return updated ?? null;
 		},
 
 		async delete(id: string) {
@@ -74,7 +86,7 @@ export function makeUserRepository(db: Database) {
 		},
 
 		async paginateCursor(p: CursorParams): Promise<UserRow[]> {
-			const conditions = [isNull(users.deletedAt)];
+			const conditions = [notDeleted(users)];
 			if (p.cursor) {
 				// Keyset predicate. Row-value comparison — index-friendly.
 				conditions.push(
