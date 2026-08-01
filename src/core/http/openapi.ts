@@ -8,6 +8,38 @@ const AUTH_BASE_PATH = '/api/auth';
 /** Better Auth tags every operation 'Default'; regroup them once merged. */
 const AUTH_TAG = 'Authentication';
 
+/**
+ * ┌──────────────────────────────────────────────────────────────────────┐
+ * │  EDIT HERE to change which auth endpoints appear in /docs.           │
+ * └──────────────────────────────────────────────────────────────────────┘
+ *
+ * Better Auth registers ~30 endpoints on our config (plus more per plugin).
+ * Most exist for flows we don't ship — social login, account linking, session
+ * management, token refresh — and listing them all buries the handful the
+ * frontend actually calls.
+ *
+ * This is DOCS-ONLY. Every Better Auth route stays live and callable at
+ * /api/auth/* whether or not it is listed here; hiding a path does not
+ * disable it. To actually take an endpoint off the air, gate it in
+ * auth/routes.ts or pass `disabledPaths` to betterAuth().
+ *
+ * Paths are relative to AUTH_BASE_PATH and written the way the OpenAPI
+ * generator emits them — params as `{token}`, not `:token`.
+ */
+const DOCUMENTED_AUTH_PATHS = new Set([
+	'/sign-up/email',
+	'/sign-in/email',
+	'/sign-out',
+	'/get-session',
+	'/update-user',
+	'/change-password',
+	'/request-password-reset',
+	'/reset-password',
+	'/reset-password/{token}',
+	'/verify-email',
+	'/send-verification-email',
+]);
+
 const HTTP_METHODS = new Set([
 	'get',
 	'put',
@@ -46,6 +78,10 @@ function mergeAuthSchema(base: Doc, auth: Doc): Doc {
 	const merged: Record<string, Doc> = { ...basePaths };
 
 	for (const [path, item] of Object.entries(authPaths)) {
+		// Default-deny: a path the frontend doesn't call stays out of the docs,
+		// including ones a future plugin upgrade adds. See DOCUMENTED_AUTH_PATHS.
+		if (!DOCUMENTED_AUTH_PATHS.has(path)) continue;
+
 		const operations: Doc = {};
 
 		for (const [key, op] of Object.entries(item)) {

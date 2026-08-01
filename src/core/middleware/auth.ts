@@ -13,8 +13,8 @@ function extractBearer(header: string | undefined): string | null {
 	return match?.[1] ?? null;
 }
 async function resolvePrincipal(c: Context<AppEnv>): Promise<Principal | null> {
-	const { auth, services } = c.get('container');
-	const token = extractBearer(c.req.header('Authorization'));
+	const { auth } = c.get('container');
+	// const token = extractBearer(c.req.header('Authorization'));
 	// --- Path 1: API key (machine caller) ---
 	// if (token?.startsWith('sk_')) {
 	// 	return services.apiKey.verify(token);
@@ -28,10 +28,15 @@ async function resolvePrincipal(c: Context<AppEnv>): Promise<Principal | null> {
 		id: session.user.id,
 		kind: 'user',
 		email: session.user.email,
+		// Always falls back to ['user'] today: `roles` is not a column, and the
+		// `role` column on users isn't declared in betterAuth's
+		// user.additionalFields, so Better Auth never returns it on the session.
+		// Fine while every caller is an ordinary member — revisit when roles
+		// actually gate something.
 		roles: (session.user as { roles?: string[] }).roles ?? ['user'],
 		scopes: ['*'], // humans have full scope; roles gate them
 		sessionId: session.session.id,
-		apiKeyId: null,
+		// apiKeyId: null, // machine callers only — see auth/principal.ts
 	};
 }
 /** Hard gate. Rejects unauthenticated requests. */
