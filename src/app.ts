@@ -6,6 +6,7 @@ import { accessLog } from '@/core/middleware/logger';
 import { containerMiddleware } from '@/core/middleware/container';
 import { errorHandler, notFoundHandler } from '@/core/middleware/error-handler';
 import { authRouter } from '@/auth/routes';
+import { userRoutes } from '@/modules/user/user.routes';
 import { corsMiddleware } from '@/core/middleware/cors';
 import {
 	securityHeaders,
@@ -30,7 +31,11 @@ app.route('/api/auth', authRouter);
 
 // ── Versioned API. Auth is applied per-route, not globally,
 // so individual routes can opt out cleanly. ──
-// app.route('/v1', userRoutes);
+// Mounting is also what puts these routes in /openapi.json: OpenAPIHono's
+// `.route()` merges the sub-app's openAPIRegistry into the parent's. A route
+// that is defined but never mounted is invisible to both the router and the
+// docs. Path is `/users` inside userRoutes, so this serves /v1/users.
+app.route('/v1', userRoutes);
 
 // ── Documentation ──
 registerOpenApi(app);

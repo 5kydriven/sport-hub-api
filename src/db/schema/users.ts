@@ -4,7 +4,6 @@ import {
 	timestamp,
 	boolean,
 	uuid,
-	uniqueIndex,
 	index,
 } from 'drizzle-orm/pg-core';
 
@@ -16,7 +15,7 @@ export const users = pgTable(
 		email: text('email').notNull().unique(),
 		emailVerified: boolean('email_verified').notNull().default(false),
 		image: text('image'),
-		role: text('role').notNull().default('member'),
+		role: text('role').notNull().default('user'),
 
 		createdAt: timestamp('created_at', { withTimezone: true })
 			.notNull()

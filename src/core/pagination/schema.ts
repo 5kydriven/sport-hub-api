@@ -23,7 +23,7 @@ export const CursorQuerySchema = z.object({
 	cursor: z.string().optional().openapi({
 		description:
 			'Opaque cursor from `meta.nextCursor`. Do not construct by hand.',
-		example: 'eyJjIjoiMjAyNS0wMS0xNVQxMDozMDowMFoiLCJpIjoiMDE5..."',
+		example: 'eyJjIjoiMjAyNS0wMS0xNVQxMDozMDowMFoiLCJpIjoiMDE5...',
 	}),
 	limit,
 });
@@ -53,11 +53,11 @@ export const CursorMetaSchema = z
 	.openapi('CursorMeta');
 
 /** Wraps any item schema into a paginated envelope. */
-export function paginated<T extends z.ZodTypeAny>(item: T, name: string) {
+export function paginated<T extends z.ZodType>(item: T, name: string) {
 	return z.object({ data: z.array(item), meta: PageMetaSchema }).openapi(name);
 }
 
-export function cursorPaginated<T extends z.ZodTypeAny>(item: T, name: string) {
+export function cursorPaginated<T extends z.ZodType>(item: T, name: string) {
 	return z
 		.object({ data: z.array(item), meta: CursorMetaSchema })
 		.openapi(name);
