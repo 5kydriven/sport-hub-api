@@ -7,22 +7,46 @@ import { count, desc, or, and, eq, lt, isNull } from 'drizzle-orm';
 export function makeUserRepository(db: Database) {
 	return {
 		async findById(id: string) {
-			// TODO
+			return await db.query.users.findFirst({
+				where: (users, { and, eq }) => and(eq(users.id, id), notDeleted(users)),
+			});
 		},
-		async findByEmail(email: string) {
-			// TODO
-		},
-		async create(data: unknown) {
-			// TODO
-		},
+
 		async update(id: string, data: unknown) {
 			// TODO
 		},
+
 		async delete(id: string) {
-			// TODO
+			const [deletedUser] = await db
+				.delete(users)
+				.where(eq(users.id, id))
+				.returning();
+
+			return deletedUser ?? null;
 		},
+
 		async softDelete(id: string) {
-			// TODO
+			const [user] = await db
+				.update(users)
+				.set({
+					deletedAt: new Date(),
+				})
+				.where(eq(users.id, id))
+				.returning();
+
+			return user ?? null;
+		},
+
+		async restore(id: string) {
+			const [user] = await db
+				.update(users)
+				.set({
+					deletedAt: null,
+				})
+				.where(eq(users.id, id))
+				.returning();
+
+			return user ?? null;
 		},
 
 		async paginateOffset(
