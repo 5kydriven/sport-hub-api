@@ -41,9 +41,11 @@
 			// accepted values, so preview is the correct tier here.
 			"vars": {
 				"ENVIRONMENT": "preview",
-				"BETTER_AUTH_URL": "http://localhost:3000",
 				"LOG_LEVEL": "info",
-				"CORS_ORIGINS": "http://localhost:3000",
+				"CORS_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000",
+				"PAGE_SIZE_DEFAULT": "20",
+				"PAGE_SIZE_MAX": "100",
+				"BETTER_AUTH_URL": "https://sport-api-staging.tagpuno619.workers.dev",
 			},
 		},
 	},
