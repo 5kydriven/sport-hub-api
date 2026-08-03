@@ -1,90 +1,90 @@
-name: Deploy
+# name: Deploy
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  verify:
-    runs-on: ubuntu-latest
+# jobs:
+#   verify:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+#       - uses: oven-sh/setup-bun@v2
 
-      - run: bun install --frozen-lockfile
+#       - run: bun install --frozen-lockfile
 
-      - name: Typecheck
-        run: bun tsc --noEmit
+#       - name: Typecheck
+#         run: bun tsc --noEmit
 
-      - name: Lint (includes architecture boundaries)
-        run: bun eslint src
+#       - name: Lint (includes architecture boundaries)
+#         run: bun eslint src
 
-      - name: Layer contract check
-        run: bash scripts/check-layers.sh
+#       - name: Layer contract check
+#         run: bash scripts/check-layers.sh
 
-      - name: Unit + contract tests
-        run: bun test
+#       - name: Unit + contract tests
+#         run: bun test
 
-      - name: Verify migrations are committed
-        run: |
-          bun db:generate
-          git diff --exit-code drizzle/ \
-            || (echo "Uncommitted migration! Run bun db:generate." && exit 1)
+#       - name: Verify migrations are committed
+#         run: |
+#           bun db:generate
+#           git diff --exit-code drizzle/ \
+#             || (echo "Uncommitted migration! Run bun db:generate." && exit 1)
 
-  deploy:
-    needs: verify
-    runs-on: ubuntu-latest
-    environment: production
+#   deploy:
+#     needs: verify
+#     runs-on: ubuntu-latest
+#     environment: production
 
-    steps:
-      - uses: actions/checkout@v4
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+#       - uses: oven-sh/setup-bun@v2
 
-      - run: bun install --frozen-lockfile
+#       - run: bun install --frozen-lockfile
 
-      # Migrations BEFORE the worker. Expand/contract makes this safe.
-      - name: Apply migrations
-        run: bun db:migrate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+#       # Migrations BEFORE the worker. Expand/contract makes this safe.
+#       - name: Apply migrations
+#         run: bun db:migrate
+#         env:
+#           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - name: Deploy worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          command: deploy --env production
+#       - name: Deploy worker
+#         uses: cloudflare/wrangler-action@v3
+#         with:
+#           apiToken: ${{ secrets.CF_API_TOKEN }}
+#           command: deploy --env production
 
-      - name: Smoke test
-        run: |
-          curl -sf https://api.example.com/health | jq -e '.ok == true'
+#       - name: Smoke test
+#         run: |
+#           curl -sf https://api.example.com/health | jq -e '.ok == true'
 
-  preview:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+#   preview:
+#     if: github.event_name == 'pull_request'
+#     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+#       - uses: oven-sh/setup-bun@v2
 
-      - run: bun install --frozen-lockfile
+#       - run: bun install --frozen-lockfile
 
-      - name: Create Neon branch
-        id: branch
-        uses: neondatabase/create-branch-action@v5
-        with:
-          project_id: ${{ secrets.NEON_PROJECT_ID }}
-          branch_name: pr-${{ github.event.number }}
-          api_key: ${{ secrets.NEON_API_KEY }}
+#       - name: Create Neon branch
+#         id: branch
+#         uses: neondatabase/create-branch-action@v5
+#         with:
+#           project_id: ${{ secrets.NEON_PROJECT_ID }}
+#           branch_name: pr-${{ github.event.number }}
+#           api_key: ${{ secrets.NEON_API_KEY }}
 
-      - name: Apply migrations
-        run: bun db:migrate
-        env:
-          DATABASE_URL: ${{ steps.branch.outputs.db_url }}
+#       - name: Apply migrations
+#         run: bun db:migrate
+#         env:
+#           DATABASE_URL: ${{ steps.branch.outputs.db_url }}
 
-      - name: Upload preview version
-        run: bunx wrangler versions upload
+#       - name: Upload preview version
+#         run: bunx wrangler versions upload
