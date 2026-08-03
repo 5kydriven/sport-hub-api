@@ -2,6 +2,7 @@ import { createMiddleware } from 'hono/factory';
 import { UnauthorizedError } from '@/core/errors';
 import type { AppEnv } from '@/core/types';
 import type { Principal } from '@/auth/principal';
+import type { UserRole } from '@/db/schema';
 import { Context } from 'hono';
 async function resolvePrincipal(c: Context<AppEnv>): Promise<Principal | null> {
 	const { auth } = c.get('container');
@@ -23,12 +24,10 @@ async function resolvePrincipal(c: Context<AppEnv>): Promise<Principal | null> {
 		id: session.user.id,
 		kind: 'user',
 		email: session.user.email,
-		// Always falls back to ['user'] today: `roles` is not a column, and the
-		// `role` column on users isn't declared in betterAuth's
-		// user.additionalFields, so Better Auth never returns it on the session.
-		// Fine while every caller is an ordinary member — revisit when roles
-		// actually gate something.
-		roles: (session.user as { roles?: string[] }).roles ?? ['user'],
+		// `role` is a single column, declared in betterAuth's
+		// user.additionalFields so the session carries it. Principal keeps the
+		// plural shape because a user may hold several roles later.
+		roles: [(session.user as { role?: UserRole }).role ?? 'player'],
 		scopes: ['*'], // humans have full scope; roles gate them
 		sessionId: session.session.id,
 		// apiKeyId: null, // machine callers only — see auth/principal.ts

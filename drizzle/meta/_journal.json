@@ -8,6 +8,13 @@
       "when": 1785421715469,
       "tag": "0000_chemical_speed",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785765836461,
+      "tag": "0001_lethal_komodo",
+      "breakpoints": true
     }
   ]
 }

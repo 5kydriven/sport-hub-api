@@ -1,9 +1,11 @@
 // auth/better-auth.ts
 import { betterAuth } from 'better-auth';
+import { APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer, openAPI } from 'better-auth/plugins';
 import type { Database } from '@/db/client';
 import type { Env } from '@/env';
+import { USER_ROLES, isUserRole } from '@/db/schema';
 import * as schema from '../db/schema';
 
 export function createAuth(env: Env, db: Database) {
@@ -24,6 +26,40 @@ export function createAuth(env: Env, db: Database) {
 			enabled: true,
 			requireEmailVerification: env.ENVIRONMENT === 'production',
 			minPasswordLength: 12,
+		},
+		user: {
+			// Without this the `role` column never reaches the session, and every
+			// caller would look like a `player` to requireRole().
+			additionalFields: {
+				role: {
+					// The literal-array form is what puts `role` in the sign-up body
+					// and documents both values in /openapi.json. It does NOT
+					// validate the incoming value — Better Auth compiles an array
+					// type to `z.any()` — which is what databaseHooks below is for.
+					type: [...USER_ROLES],
+					required: false,
+					defaultValue: 'player',
+					// Accepted at sign-up. Omitting it yields a player.
+					input: true,
+				},
+			},
+		},
+		databaseHooks: {
+			user: {
+				create: {
+					before: async (user) => {
+						const { role } = user as { role?: unknown };
+						// Reject before the insert. Left to Postgres, an unknown role
+						// surfaces as a failed enum cast — a 500 where the caller
+						// deserves a 400 naming the legal values.
+						if (role !== undefined && !isUserRole(role)) {
+							throw new APIError('BAD_REQUEST', {
+								message: `role must be one of: ${USER_ROLES.join(', ')}`,
+							});
+						}
+					},
+				},
+			},
 		},
 		session: {
 			expiresIn: 60 * 60 * 24 * 7, // 7 days

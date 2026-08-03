@@ -33,7 +33,7 @@ const userExample = {
 	name: 'Ada Lovelace',
 	emailVerified: true,
 	image: null,
-	role: 'member',
+	role: 'player',
 	createdAt: '2025-01-15T10:30:00.000Z',
 	updatedAt: '2025-01-15T10:30:00.000Z',
 } satisfies z.infer<typeof UserWire>;

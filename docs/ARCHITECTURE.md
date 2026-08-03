@@ -227,7 +227,7 @@ const userExample = {
   name: 'Ada Lovelace',
   emailVerified: true,
   image: null,
-  role: 'member',
+  role: 'player',
   createdAt: '2025-01-15T10:30:00.000Z',
   updatedAt: '2025-01-15T10:30:00.000Z',
 } satisfies z.infer<typeof UserWire>;   // ← `avatarUrl` now fails to compile
@@ -374,7 +374,9 @@ Session tokens arrive by cookie **or** `Authorization: Bearer` — the `bearer()
 - **Roles** answer *what is this person?* They live on the user.
 - The effective permission is the **intersection**.
 
-Today every human gets `scopes: ['*']` and roles gate them. Note the honest caveat at [auth.ts:31](src/core/middleware/auth.ts:31): `roles` always falls back to `['user']` because the `role` column is not declared in Better Auth's `additionalFields`. Fix that before roles gate anything real.
+Today every human gets `scopes: ['*']` and roles gate them. The role vocabulary is closed — a Postgres enum, `USER_ROLES` in [users.ts](src/db/schema/users.ts) — and holds exactly `gym_owner` and `player`; `player` is the default. `role` is declared in Better Auth's `user.additionalFields`, which is what puts it on the session for [auth.ts](src/core/middleware/auth.ts) to read and what accepts it in the sign-up body (`POST /api/auth/sign-up/email`); omitting it yields a `player`.
+
+> **Sign-up is self-service and unauthenticated, so anyone can register as `gym_owner`.** Better Auth compiles a literal-array field type to `z.any()`, so the *vocabulary* is enforced by the `databaseHooks.user.create.before` hook in [better-auth.ts](src/auth/better-auth.ts) — but nothing enforces *entitlement*. Before `gym_owner` gates anything a player must not reach, gate the claim itself: an invite code, a verification step, or an admin-only promotion route. `Principal.roles` stays plural against the day a user holds more than one.
 
 **Resource-level authorization belongs in the service.** Middleware cannot answer *"may this user edit **this** post?"* — that needs the row. Route middleware handles **coarse** access (`requireScopes('users:read')`); **fine-grained** ownership checks live in the service, where the data is.
 
