@@ -35,4 +35,9 @@ lerna-debug.log*
 # misc
 .DS_Store
 
-.github/*
+tmp/*
+
+# codex-workflow-managed-start
+agent_docs/
+.codex_workflow_hidden_resources/
+# codex-workflow-managed-end
