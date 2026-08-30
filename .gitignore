@@ -34,3 +34,7 @@ lerna-debug.log*
 
 # misc
 .DS_Store
+
+tmp/*
+agent_docs/*
+.codex_workflow_hidden_resources/*
