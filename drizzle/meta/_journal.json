@@ -22,6 +22,13 @@
       "when": 1788070106530,
       "tag": "0002_useful_eternity",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788070839227,
+      "tag": "0003_complete_vance_astro",
+      "breakpoints": true
     }
   ]
 }

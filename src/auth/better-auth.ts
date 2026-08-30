@@ -8,6 +8,8 @@ import type { Env } from '@/env';
 import { USER_ROLES, isUserRole } from '@/db/schema';
 import * as schema from '../db/schema';
 
+const PUBLIC_SIGNUP_ROLES = ['gym_owner', 'player'] as const;
+
 export function createAuth(env: Env, db: Database) {
 	return betterAuth({
 		database: drizzleAdapter(db, {
@@ -33,10 +35,10 @@ export function createAuth(env: Env, db: Database) {
 			additionalFields: {
 				role: {
 					// The literal-array form is what puts `role` in the sign-up body
-					// and documents both values in /openapi.json. It does NOT
+					// and documents the public signup values in /openapi.json. It does NOT
 					// validate the incoming value — Better Auth compiles an array
 					// type to `z.any()` — which is what databaseHooks below is for.
-					type: [...USER_ROLES],
+					type: [...PUBLIC_SIGNUP_ROLES],
 					required: false,
 					defaultValue: 'player',
 					// Accepted at sign-up. Omitting it yields a player.
@@ -49,6 +51,11 @@ export function createAuth(env: Env, db: Database) {
 				create: {
 					before: async (user) => {
 						const { role } = user as { role?: unknown };
+						if (role === 'admin') {
+							throw new APIError('FORBIDDEN', {
+								message: 'The admin role cannot be self-assigned',
+							});
+						}
 						// Reject before the insert. Left to Postgres, an unknown role
 						// surfaces as a failed enum cast — a 500 where the caller
 						// deserves a 400 naming the legal values.

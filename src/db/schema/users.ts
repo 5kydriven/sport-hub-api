@@ -9,11 +9,11 @@ import {
 } from 'drizzle-orm/pg-core';
 
 /**
- * The only two kinds of person the product has. Anything outside this list is
+ * The supported account roles. Anything outside this list is
  * rejected by Postgres, not just by the application — which is the point of an
  * enum over a `text` column with a default.
  */
-export const USER_ROLES = ['gym_owner', 'player'] as const;
+export const USER_ROLES = ['admin', 'gym_owner', 'player'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export const userRoleEnum = pgEnum('user_role', USER_ROLES);

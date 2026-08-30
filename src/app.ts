@@ -26,6 +26,7 @@ app.use('*', corsMiddleware());
 app.use('*', containerMiddleware);
 app.use('*', accessLog);
 // ── Unauthenticated ──
+app.get('/', (c) => c.text('Server is running!'));
 app.get('/health', (c) => c.json({ ok: true, ts: Date.now() }));
 app.route('/api/auth', authRouter);
 
