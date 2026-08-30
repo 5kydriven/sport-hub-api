@@ -10,7 +10,7 @@
 	},
 	"vars": {
 		"ENVIRONMENT": "production",
-		"BETTER_AUTH_URL": "http://localhost:3000",
+		"BETTER_AUTH_URL": "https://sport-api.tagpuno619.workers.dev",
 		"LOG_LEVEL": "info",
 		"CORS_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000",
 		"PAGE_SIZE_DEFAULT": "20",
