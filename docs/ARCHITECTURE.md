@@ -21,10 +21,10 @@ Be honest about this table before planning work against it.
 | OpenAPI + Scalar docs + Better Auth spec merge | Implemented — [core/http/openapi.ts](src/core/http/openapi.ts), [app.ts](src/app.ts) |
 | Auth (session/bearer via Better Auth), scopes, roles | Implemented — [auth.ts](src/core/middleware/auth.ts), [require-scopes.ts](src/core/middleware/require-scopes.ts) |
 | `GET /v1/users` | Implemented — [user.routes.ts](src/modules/user/user.routes.ts) |
-| User repo CRUD (`findById`, `create`, `update`, `delete`, `softDelete`) | **Stubs.** `// TODO` bodies |
-| `UserService.updateUser` / `deleteUser` | **Empty function bodies.** They resolve `undefined` and lie about it |
-| Module barrel [modules/user/index.ts](src/modules/user/index.ts) | **Empty file** — violates R4 |
-| [db/pool.ts](src/db/pool.ts) | **Dead code.** A second, half-written `createContainer`. Delete it or finish it (see §12) |
+| User repository operations (`findById`, `update`, `delete`, `softDelete`, `restore`) | Implemented — [user.repository.ts](src/modules/user/user.repository.ts); user creation is not currently exposed |
+| `UserService.updateUser` / `deleteUser` | Implemented — [user.service.ts](src/modules/user/user.service.ts) |
+| Module barrel [modules/user/index.ts](src/modules/user/index.ts) | Implemented — exports the user module's public surface |
+| Pooled database driver | Not present; [db/client.ts](src/db/client.ts) is the sole database client. Add a pooled/WebSocket driver only when interactive transactions require it |
 | Rate limiting | **Not wired.** KV bindings commented out in [wrangler.jsonc](wrangler.jsonc); standard defined in §10 |
 | Tests | None |
 
@@ -76,7 +76,7 @@ src/
 
 **R3 — `core/` never imports from `modules/`.** Dependency direction is strictly inward. Enforced in [eslint.config.ts](eslint.config.ts).
 
-**R4 — Each module exports through `index.ts`.** The barrel is the public surface; anything not exported there is internal. *Currently violated: [modules/user/index.ts](src/modules/user/index.ts) is empty.* It should export `userRoutes`, `makeUserService`, `UserService`, `User`, and the schemas — and nothing else.
+**R4 — Each module exports through `index.ts`.** The barrel is the public surface; anything not exported there is internal. The user module's barrel exports `userRoutes`, `makeUserService`, `UserService`, `User`, and the schemas.
 
 ### 2.2 The layer contract
 
@@ -114,7 +114,7 @@ Concretely, **forbidden**:
 - Any `let` that is reassigned across sections of a function (accumulators, "running state", flags).
 - Generic carry-along names: `data`, `result`, `temp`, `res`, `obj`, `value`, `item`, `payload`, `output`. These names *require* the reader to scroll up, because the name says nothing.
 - A variable that changes meaning as the function progresses (`user` is a row, then a DTO, then a string id).
-- Module-level mutable state of any kind (`let _pool` in [db/pool.ts:7](src/db/pool.ts:7) is exactly the shape this rule bans).
+- Module-level mutable state of any kind is exactly the shape this rule bans.
 
 **Allowed — exactly two categories, nothing else:**
 
@@ -139,7 +139,7 @@ Concretely, **forbidden**:
 
 **Corollary S1a — functions stay short enough that declaration and use fit on one screen.** The no-scroll rule is unenforceable in a 200-line function. If a function is long enough that S1 becomes painful, the function is the defect, not the rule.
 
-**Corollary S1b — `const` everywhere. `let` requires a comment justifying the mutation.** There is currently no `let` in `src/` outside `db/pool.ts`. Keep it that way.
+**Corollary S1b — `const` everywhere. `let` requires a comment justifying the mutation.** Keep mutable bindings out of `src/` unless the mutation is required and explained at the decision site.
 
 ### S2 — Declaration order follows reading order
 
@@ -227,7 +227,7 @@ const userExample = {
   name: 'Ada Lovelace',
   emailVerified: true,
   image: null,
-  role: 'member',
+  role: 'player',
   createdAt: '2025-01-15T10:30:00.000Z',
   updatedAt: '2025-01-15T10:30:00.000Z',
 } satisfies z.infer<typeof UserWire>;   // ← `avatarUrl` now fails to compile
@@ -374,7 +374,9 @@ Session tokens arrive by cookie **or** `Authorization: Bearer` — the `bearer()
 - **Roles** answer *what is this person?* They live on the user.
 - The effective permission is the **intersection**.
 
-Today every human gets `scopes: ['*']` and roles gate them. Note the honest caveat at [auth.ts:31](src/core/middleware/auth.ts:31): `roles` always falls back to `['user']` because the `role` column is not declared in Better Auth's `additionalFields`. Fix that before roles gate anything real.
+Today every human gets `scopes: ['*']` and roles gate them. The role vocabulary is closed — a Postgres enum, `USER_ROLES` in [users.ts](src/db/schema/users.ts) — and holds exactly `gym_owner` and `player`; `player` is the default. `role` is declared in Better Auth's `user.additionalFields`, which is what puts it on the session for [auth.ts](src/core/middleware/auth.ts) to read and what accepts it in the sign-up body (`POST /api/auth/sign-up/email`); omitting it yields a `player`.
+
+> **Sign-up is self-service and unauthenticated, so anyone can register as `gym_owner`.** Better Auth compiles a literal-array field type to `z.any()`, so the *vocabulary* is enforced by the `databaseHooks.user.create.before` hook in [better-auth.ts](src/auth/better-auth.ts) — but nothing enforces *entitlement*. Before `gym_owner` gates anything a player must not reach, gate the claim itself: an invite code, a verification step, or an admin-only promotion route. `Principal.roles` stays plural against the day a user holds more than one.
 
 **Resource-level authorization belongs in the service.** Middleware cannot answer *"may this user edit **this** post?"* — that needs the row. Route middleware handles **coarse** access (`requireScopes('users:read')`); **fine-grained** ownership checks live in the service, where the data is.
 
@@ -497,7 +499,7 @@ logger.info ('auth.failed',       { reason, ip })          // never the token
 
 Never combine expand and contract in one deploy: during a rolling deploy both worker versions serve traffic simultaneously, and a dropped column makes the old version throw.
 
-**Delete [db/pool.ts](src/db/pool.ts).** It is a second `createContainer` that shadows the real composition root, holds module-level mutable state (`let _pool`), and returns nothing. It contradicts P1, S1, and §5. The pooled/WebSocket driver is only needed for interactive transactions — bring it back deliberately, inside the real container, on the day that requirement appears (decision D5).
+There is no pooled/WebSocket driver in the current tree; [db/client.ts](src/db/client.ts) is the single database client. If interactive transactions become a requirement, introduce the driver deliberately inside the real composition root (decision D5) rather than adding a second container or module-level connection state.
 
 ---
 

@@ -1,8 +1,8 @@
 # Sport API
 
 Cloudflare Worker backend for the community sports venue discovery and booking
-platform. The current engineering standard is
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+platform. Product and engineering documentation starts at
+[docs/index.md](docs/index.md).
 
 ## Local development
 
