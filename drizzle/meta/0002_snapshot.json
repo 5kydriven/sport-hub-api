@@ -1,6 +1,6 @@
 {
-  "id": "26610b15-5b61-427e-82e3-dfd29bfbd28b",
-  "prevId": "577b3cbd-2011-41d4-b024-bc51433dc39f",
+  "id": "20c49d6e-89a2-4ad1-96e4-70fd7c8909d2",
+  "prevId": "26610b15-5b61-427e-82e3-dfd29bfbd28b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -372,10 +372,11 @@
         },
         "role": {
           "name": "role",
-          "type": "text",
+          "type": "user_role",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'user'"
+          "default": "'player'"
         },
         "created_at": {
           "name": "created_at",
@@ -437,7 +438,16 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.user_role": {
+      "name": "user_role",
+      "schema": "public",
+      "values": [
+        "gym_owner",
+        "player"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},
