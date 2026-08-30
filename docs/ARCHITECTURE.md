@@ -486,7 +486,7 @@ logger.info ('auth.failed',       { reason, ip })          // never the token
 
 `EnvSchema` describes only what Zod *can* describe. Non-serializable Cloudflare bindings (KV, R2, DO) live on `RawBindings` and are never parsed.
 
-**`wrangler.jsonc` var names must match `EnvSchema` exactly.** `ENVIRONMENT` accepts `development | preview | production` — `"staging"` is not a value, which is why the staging environment sets `preview` ([wrangler.jsonc:39](wrangler.jsonc:39)).
+**`wrangler.jsonc` var names must match `EnvSchema` exactly.** `ENVIRONMENT` accepts `development | preview | production`; configure the single production Worker with `production`.
 
 **Migrations are generated, reviewed, committed, and applied by CI — never `db:push` against production.** `drizzle-kit push` diffs and applies with no audit trail and no down migration. It is how you drop a column at 3am. `db:generate` → commit the SQL → `db:migrate` in CI only.
 
@@ -510,24 +510,17 @@ A rule that is not mechanised is a suggestion.
 **Already enforced** — [eslint.config.ts](eslint.config.ts):
 - `import/no-restricted-paths`: R3 (`core` ⊬ `modules`), R2 (services ⊬ `db` except `db/schema`), routes ⊬ repositories.
 - `check-file`: kebab-case filenames and module folders; `*.service.ts` naming.
+- `no-restricted-imports` blocks HTTP dependencies from services (P5).
+- `no-restricted-syntax` blocks module-level `let` (S1).
+- `@typescript-eslint/no-unused-vars` prevents dead code.
 
-**To add:**
+CI additionally runs `tsc --noEmit`, Bun unit tests, migration-drift detection,
+and a Wrangler dry-run. Review every `.openapi({ example })` for `satisfies`
+and every `.extend()` to ensure it only re-types existing keys (SC2/SC3).
 
-| Check | Enforces |
-| --- | --- |
-| `grep -rE "\b(Context\|c\.req\|c\.json\|HTTPException)\b" src/modules/**/*.service.ts` → must be empty | P5, layer contract |
-| `no-restricted-syntax` banning `let` at module scope | S1 |
-| `@typescript-eslint/no-unused-vars` as `error` | dead code (`extractBearer`, `isUser` today) |
-| `tsc --noEmit` in CI | the whole chain of truth |
-| Review checklist: every `.openapi({ example })` has `satisfies` | SC3 |
-| Review checklist: every `.extend()` only re-types existing keys | SC2 |
-
-**`tsconfig.json` gaps** ([tsconfig.json](tsconfig.json)):
-
-- `"paths": { "@/*": ["./src/*", "./src/core/*", "./src/db/*"] }` is **ambiguous** — `@/types` could resolve to `src/types.ts` or `src/core/types.ts`. Every import in the codebase already writes the full path (`@/core/types`, `@/db/schema`), so the extra roots buy nothing and cost determinism. Reduce to `"@/*": ["./src/*"]`.
-- `"types": ["node"]` but this is a Workers runtime — should include `@cloudflare/workers-types` (the dependency is installed).
-- `exactOptionalPropertyTypes` is off; the reference architecture recommends it.
-- `noUncheckedIndexedAccess: true` is on — **keep it.** It is the highest-value flag here, and [user.repository.ts:49](src/modules/user/user.repository.ts:49) shows exactly why: it forces `totalRows[0]?.value ?? 0` instead of a `!` that would crash on the one shape TS was warning about.
+`tsconfig.json` uses one unambiguous `@/* -> ./src/*` path alias, includes the
+Cloudflare Worker types, enables `exactOptionalPropertyTypes`, and keeps
+`noUncheckedIndexedAccess: true`.
 
 ---
 

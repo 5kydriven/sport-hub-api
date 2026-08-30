@@ -721,13 +721,9 @@ Possible resource groups:
 
 These are conceptual resource boundaries, not finalized endpoint definitions.
 
-The actual contract belongs in:
-
-```text
-docs/api/openapi.yaml
-```
-
-or the generated Hono OpenAPI specification.
+The actual contract is the runtime-generated Hono OpenAPI specification at
+`/openapi.json`, rendered for people at `/docs`. Do not maintain a second
+`docs/api/openapi.yaml`, because it would drift from the mounted routes.
 
 ---
 

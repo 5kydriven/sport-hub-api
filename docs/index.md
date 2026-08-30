@@ -35,6 +35,10 @@ This is the entry point for the product and engineering documentation of the com
 
 The API contract is generated from the Hono route schemas at runtime. Use the deployed or local `/openapi.json` endpoint as the canonical machine-readable contract, and `/docs` for its Scalar reference UI. Do not create a hand-maintained endpoint schema that can drift from those routes.
 
+## Operations
+
+- [Deployment runbook](operations/deployment.md) - CI/CD behavior, required production configuration, migrations, recovery, and test strategy.
+
 ## Working with this documentation
 
-Before changing a feature, read its specification, relevant flow, the [system architecture overview](architecture/overview.md), and the [backend architecture standard](ARCHITECTURE.md). Update the affected document when an externally visible behavior, flow, API contract, or architecture decision changes.
+Before changing a feature, read its specification, relevant flow, the [system architecture overview](architecture/overview.md), and the [backend architecture standard](ARCHITECTURE.md). Update the affected document when an externally visible behavior, flow, API contract, architecture decision, or release procedure changes.
