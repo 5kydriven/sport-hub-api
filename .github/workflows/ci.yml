@@ -29,6 +29,62 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Validate pull request description
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          body="${PR_BODY:-}"
+
+          if ! grep -Eq '^## Summary[[:space:]]*$' <<< "$body"; then
+            echo 'PR description must contain a ## Summary section.' >&2
+            exit 1
+          fi
+
+          if ! grep -Eq '^## Verification[[:space:]]*$' <<< "$body"; then
+            echo 'PR description must contain a ## Verification section.' >&2
+            exit 1
+          fi
+
+          summary="$(awk '/^## Summary[[:space:]]*$/{inside=1; next} /^## Verification[[:space:]]*$/{inside=0} inside' <<< "$body")"
+          verification="$(awk '/^## Verification[[:space:]]*$/{inside=1; next} /^## /{inside=0} inside' <<< "$body")"
+
+          has_content() {
+            awk '
+              BEGIN { in_comment = 0; found = 0 }
+              {
+                line = $0
+                if (in_comment) {
+                  if (index(line, "-->") > 0) {
+                    in_comment = 0
+                    sub(/^.*-->/, "", line)
+                  } else {
+                    next
+                  }
+                }
+                if (index(line, "<!--") > 0) {
+                  sub(/<!--.*$/, "", line)
+                  in_comment = 1
+                }
+                gsub(/^[[:space:]-]+$/, "", line)
+                if (line ~ /[^[:space:]]/) found = 1
+              }
+              END { exit(found ? 0 : 1) }
+            '
+          }
+
+          if ! has_content <<< "$summary"; then
+            echo 'PR ## Summary must contain at least one concrete item.' >&2
+            exit 1
+          fi
+
+          if ! has_content <<< "$verification"; then
+            echo 'PR ## Verification must contain at least one command or check.' >&2
+            exit 1
+          fi
+
       - name: Unit tests
         run: bun run test
 

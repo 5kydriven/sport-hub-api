@@ -15,6 +15,35 @@ and one approving review before merge. Use the `production` GitHub Environment
 to restrict access to deployment secrets and, if desired, require an approval
 before the deploy job begins.
 
+## Pull request description standard
+
+Every pull request targeting `main` uses the repository template and must keep
+these sections in its description:
+
+```markdown
+## Summary
+
+- What changed and why.
+
+## Verification
+
+- Exact commands and manual checks that passed.
+```
+
+The CI `Verify` job rejects a PR that omits either section or leaves it empty.
+For endpoint changes, include the HTTP status, content type, and expected body.
+For migrations, name the generated files and explain compatibility or rollback
+impact. Keep unrelated discussion in comments so the description remains the
+release handoff.
+
+The local equivalents used in the verification section are:
+
+```sh
+bun run check
+bun run check:migrations
+bun run deploy:dry-run
+```
+
 ## Required configuration
 
 Configure these GitHub Environment secrets under `production`:
