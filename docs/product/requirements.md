@@ -18,7 +18,14 @@ These requirements represent the current MVP direction and should be used as the
 
 ## 2. User Roles
 
-The system has two primary user roles.
+The system has three account roles. `player` and `gym_owner` are the primary
+product roles; `admin` is a platform-operations role and is not available via
+public self-sign-up.
+
+### Admin
+
+An admin operates the platform and may use explicitly admin-only capabilities
+as they are delivered. Admin does not automatically own or manage a venue.
 
 ### Player
 

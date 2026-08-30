@@ -290,9 +290,13 @@ The user module represents application users and basic profile information.
 Roles:
 
 ```text
+admin
 player
 gym_owner
 ```
+
+`admin` is reserved for platform operations and is provisioned outside public
+registration. `player` remains the default account role.
 
 Responsibilities may include:
 

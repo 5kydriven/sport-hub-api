@@ -45,12 +45,17 @@ docs/specs/venue-discovery.md
 
 # 3. User Roles
 
-The MVP supports two primary roles:
+The MVP supports three account roles:
 
 ```text
+admin
 player
 gym_owner
 ```
+
+`player` is the default role. `admin` is a platform-operations role and is
+never granted by public self-sign-up; it must be provisioned through a trusted
+administrative path.
 
 ---
 
@@ -83,13 +88,29 @@ A gym owner can:
 
 ---
 
+## Admin
+
+An admin is a platform operator who may access explicitly admin-only
+capabilities as those modules are delivered. Admin is not a venue-staff role
+and does not automatically grant ownership of any venue. The MVP does not
+define admin routes yet; provisioning and authorization must be added together
+before an admin capability is exposed.
+
+---
+
 # 4. Account Role
 
 ## AUTH-SPEC-001 — Account Has Role
 
 Every authenticated account must have an application role.
 
-For MVP:
+For MVP, every account has exactly one of:
+
+```text
+admin
+```
+
+or:
 
 ```text
 player
@@ -484,21 +505,21 @@ This authorization must be validated before approval or rejection.
 
 # 24. Role-Based Access Summary
 
-| Capability                  | Player |                Gym Owner |
-| --------------------------- | -----: | -----------------------: |
-| Login                       |    Yes |                      Yes |
-| Logout                      |    Yes |                      Yes |
-| Browse nearby venues        |    Yes |            No by default |
-| View venue details          |    Yes | Owner management context |
-| Submit booking              |    Yes |                       No |
-| Cancel own booking          |    Yes |                       No |
-| Create venue                |     No |                      Yes |
-| Edit owned venue            |     No |                      Yes |
-| Create court                |     No |                      Yes |
-| Configure availability      |     No |                      Yes |
-| View managed venue bookings |     No |                      Yes |
-| Approve booking             |     No |                      Yes |
-| Reject booking              |     No |                      Yes |
+| Capability                  | Admin | Player |                Gym Owner |
+| --------------------------- | ----: | -----: | -----------------------: |
+| Login                       |   Yes |    Yes |                      Yes |
+| Logout                      |   Yes |    Yes |                      Yes |
+| Browse nearby venues        |     — |    Yes |            No by default |
+| View venue details          |     — |    Yes | Owner management context |
+| Submit booking              |     — |    Yes |                       No |
+| Cancel own booking          |     — |    Yes |                       No |
+| Create venue                |     — |     No |                      Yes |
+| Edit owned venue            |     — |     No |                      Yes |
+| Create court                |     — |     No |                      Yes |
+| Configure availability      |     — |     No |                      Yes |
+| View managed venue bookings |     — |     No |                      Yes |
+| Approve booking             |     — |     No |                      Yes |
+| Reject booking              |     — |     No |                      Yes |
 
 This represents MVP role behavior.
 
@@ -746,7 +767,7 @@ Every authenticated user has a valid account identity.
 
 ## INV-AUTH-002
 
-Every MVP account has one recognized role.
+Every MVP account has one recognized role: `admin`, `gym_owner`, or `player`.
 
 ## INV-AUTH-003
 
@@ -771,6 +792,10 @@ A session marked invalid or expired must not continue authorizing protected acti
 ## INV-AUTH-008
 
 Logging out invalidates the user's authenticated application state.
+
+## INV-AUTH-009
+
+Public self-sign-up cannot grant the `admin` role.
 
 ---
 
@@ -823,6 +848,7 @@ Logging out invalidates the user's authenticated application state.
 - [ ] Gym owner can access owner-management functionality.
 - [ ] Gym owner cannot modify another owner's venue.
 - [ ] Gym owner cannot approve bookings outside managed venues.
+- [ ] Admin is not assignable through public self-sign-up.
 
 ---
 

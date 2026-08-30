@@ -49,6 +49,9 @@ This MVP validates the core marketplace interaction: authenticated players disco
 - Social feeds, teams, matchmaking, tournaments, and ratings.
 - Advanced recommendation, AI product features, dynamic pricing, recurring bookings, and cancellation penalties.
 
+The platform has an `admin` account role for operations, but admin-only product
+capabilities are outside this MVP unless a feature explicitly defines them.
+
 ## Source of truth
 
 Use [vision.md](vision.md) for product intent and [requirements.md](requirements.md) for detailed requirements and acceptance criteria. This document is a concise implementation boundary.
