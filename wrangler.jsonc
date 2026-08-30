@@ -5,6 +5,17 @@
 	"compatibility_date": "2026-07-25",
 	"compatibility_flags": ["nodejs_compat"],
 	"keep_vars": true,
+	"secrets": {
+		"required": ["DATABASE_URL", "BETTER_AUTH_SECRET"],
+	},
+	"vars": {
+		"ENVIRONMENT": "production",
+		"BETTER_AUTH_URL": "http://localhost:3000",
+		"LOG_LEVEL": "info",
+		"CORS_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000",
+		"PAGE_SIZE_DEFAULT": "20",
+		"PAGE_SIZE_MAX": "100",
+	},
 	"dev": {
 		"port": 3000,
 	},
@@ -33,22 +44,6 @@
 	// 		"id": "...",
 	// 	},
 	// ],
-	"env": {
-		"staging": {
-			"name": "sport-api-staging",
-			// Keys must match EnvSchema in src/env.ts exactly. `ENVIRONMENT`
-			// is the name the schema validates; "staging" is not one of its
-			// accepted values, so preview is the correct tier here.
-			"vars": {
-				"ENVIRONMENT": "preview",
-				"LOG_LEVEL": "info",
-				"CORS_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000",
-				"PAGE_SIZE_DEFAULT": "20",
-				"PAGE_SIZE_MAX": "100",
-				"BETTER_AUTH_URL": "https://sport-api-staging.tagpuno619.workers.dev",
-			},
-		},
-	},
 	// "r2_buckets": [
 	//   {
 	//     "binding": "MY_BUCKET",
