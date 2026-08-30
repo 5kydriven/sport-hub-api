@@ -1,9 +1,9 @@
 <!-- codex-workflow-id: viettran-edgeAI/codex_workflow -->
 <!-- codex-workflow-managed-start -->
+
 # AGENTS.md
 
 ## Project Context
-
 
 ## Design Principles
 
@@ -120,6 +120,45 @@ the current operating system and shell when running filesystem commands.
 <!-- codex-workflow-managed-end -->
 
 <!-- codex-workflow-project-personalization-start -->
+
+# Agent Instructions
+
+## Before Editing Code
+
+Read the relevant documentation first:
+
+1. `docs/architecture/overview.md`
+2. The feature specification under `docs/specs/`
+3. Relevant flow diagrams under `docs/flows/`
+4. Relevant ADRs under `docs/architecture/decisions/`
+5. `docs/api/openapi.yaml` when API behavior is involved
+
+## Implementation Rules
+
+- Follow established architecture and naming conventions.
+- Do not introduce new dependencies unless required.
+- Keep changes scoped to the requested behavior.
+- Add or update tests for changed behavior.
+- Never silently change API assumptions.
+
+## Documentation Rules
+
+Update documentation when:
+
+- externally visible feature behavior changes
+- a flow changes
+- an API contract changes
+- an architecture decision changes
+
+## Definition of Done
+
+A change is complete when:
+
+- implementation is complete
+- relevant tests pass
+- acceptance criteria are satisfied
+- documentation matches the implementation
+
 <!-- codex-workflow-project-personalization-end -->
 
 <!-- codex-workflow-project-local-instructions-start -->
