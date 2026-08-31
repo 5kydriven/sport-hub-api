@@ -17,7 +17,7 @@ const base = createSelectSchema(users);
  * columns given a wire representation. It must never introduce a key the table
  * does not have (SC2).
  */
-const UserWire = base.omit({ deletedAt: true }).extend({
+const UserWire = base.omit({ deletedAt: true, onboardingCompletedAt: true }).extend({
 	createdAt: z.coerce.date().transform((d) => d.toISOString()),
 	updatedAt: z.coerce.date().transform((d) => d.toISOString()),
 });

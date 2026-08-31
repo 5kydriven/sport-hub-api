@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { USER_ROLES, isUserRole } from '@/db/schema';
+import { USER_ROLES, isUserRole, venues } from '@/db/schema';
 
 describe('user roles', () => {
 	test('exposes the three supported account roles', () => {
@@ -12,5 +12,9 @@ describe('user roles', () => {
 		expect(isUserRole('player')).toBe(true);
 		expect(isUserRole('owner')).toBe(false);
 		expect(isUserRole(undefined)).toBe(false);
+	});
+
+	test('keeps venue publication disabled by default', () => {
+		expect(venues.isPublished.default).toBe(false);
 	});
 });

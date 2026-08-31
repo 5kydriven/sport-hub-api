@@ -31,6 +31,13 @@ export class ForbiddenError extends AppError {
 		super(message, details);
 	}
 }
+export class OnboardingRequiredError extends AppError {
+	readonly status = 403;
+	readonly code = 'ONBOARDING_REQUIRED';
+	constructor() {
+		super('Complete onboarding before using the application');
+	}
+}
 export class NotFoundError extends AppError {
 	readonly status = 404;
 	readonly code = 'NOT_FOUND';

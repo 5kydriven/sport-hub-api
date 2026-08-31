@@ -5,10 +5,8 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer, openAPI } from 'better-auth/plugins';
 import type { Database } from '@/db/client';
 import type { Env } from '@/env';
-import { USER_ROLES, isUserRole } from '@/db/schema';
+import { isUserRole } from '@/db/schema';
 import * as schema from '../db/schema';
-
-const PUBLIC_SIGNUP_ROLES = ['gym_owner', 'player'] as const;
 
 export function createAuth(env: Env, db: Database) {
 	return betterAuth({
@@ -23,26 +21,27 @@ export function createAuth(env: Env, db: Database) {
 		}),
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL: env.BETTER_AUTH_URL,
+		basePath: '/v1/api/auth',
 		trustedOrigins: env.CORS_ORIGINS,
 		emailAndPassword: {
 			enabled: true,
-			requireEmailVerification: env.ENVIRONMENT === 'production',
+			requireEmailVerification: false,
 			minPasswordLength: 12,
 		},
 		user: {
-			// Without this the `role` column never reaches the session, and every
-			// caller would look like a `player` to requireRole().
+			// These are server-owned fields. Registration collects credentials only;
+			// onboarding assigns the final role and marks the account complete.
 			additionalFields: {
 				role: {
-					// The literal-array form is what puts `role` in the sign-up body
-					// and documents the public signup values in /openapi.json. It does NOT
-					// validate the incoming value — Better Auth compiles an array
-					// type to `z.any()` — which is what databaseHooks below is for.
-					type: [...PUBLIC_SIGNUP_ROLES],
+					type: 'string',
 					required: false,
 					defaultValue: 'player',
-					// Accepted at sign-up. Omitting it yields a player.
-					input: true,
+					input: false,
+				},
+				onboardingCompletedAt: {
+					type: 'date',
+					required: false,
+					input: false,
 				},
 			},
 		},
@@ -61,7 +60,7 @@ export function createAuth(env: Env, db: Database) {
 						// deserves a 400 naming the legal values.
 						if (role !== undefined && !isUserRole(role)) {
 							throw new APIError('BAD_REQUEST', {
-								message: `role must be one of: ${USER_ROLES.join(', ')}`,
+								message: 'Invalid account role',
 							});
 						}
 					},
@@ -71,7 +70,9 @@ export function createAuth(env: Env, db: Database) {
 		session: {
 			expiresIn: 60 * 60 * 24 * 7, // 7 days
 			updateAge: 60 * 60 * 24, // slide the window daily
-			cookieCache: { enabled: true, maxAge: 60 * 5 },
+			// Role selection happens immediately after registration. A cached session
+			// would expose the default player role for up to five minutes.
+			cookieCache: { enabled: false },
 		},
 		advanced: {
 			cookiePrefix: 'app',

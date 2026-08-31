@@ -4,7 +4,7 @@ import { ZodError } from 'zod';
 import type { AppEnv } from '@/core/types';
 
 /** Where authRouter is mounted in app.ts. Better Auth emits paths relative to it. */
-const AUTH_BASE_PATH = '/api/auth';
+const AUTH_BASE_PATH = '/v1/api/auth';
 /** Better Auth tags every operation 'Default'; regroup them once merged. */
 const AUTH_TAG = 'Authentication';
 
@@ -19,7 +19,7 @@ const AUTH_TAG = 'Authentication';
  * frontend actually calls.
  *
  * This is DOCS-ONLY. Every Better Auth route stays live and callable at
- * /api/auth/* whether or not it is listed here; hiding a path does not
+ * /v1/api/auth/* whether or not it is listed here; hiding a path does not
  * disable it. To actually take an endpoint off the air, gate it in
  * auth/routes.ts or pass `disabledPaths` to betterAuth().
  *
@@ -130,7 +130,7 @@ export function registerOpenApi(app: OpenAPIHono<AppEnv>) {
 		scheme: 'bearer',
 		bearerFormat: 'opaque',
 		description:
-			'Session token from `POST /api/auth/sign-in/email`, or an API key (`sk_live_...`).',
+		'Session token from `POST /v1/api/auth/sign-in/email`.',
 	});
 
 	app.get('/openapi.json', async (c) => {

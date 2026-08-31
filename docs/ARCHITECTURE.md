@@ -20,7 +20,8 @@ Be honest about this table before planning work against it.
 | Pagination (cursor + offset) | Implemented end-to-end — [core/pagination/](src/core/pagination/), [user.repository.ts](src/modules/user/user.repository.ts) |
 | OpenAPI + Scalar docs + Better Auth spec merge | Implemented — [core/http/openapi.ts](src/core/http/openapi.ts), [app.ts](src/app.ts) |
 | Auth (session/bearer via Better Auth), scopes, roles | Implemented — [auth.ts](src/core/middleware/auth.ts), [require-scopes.ts](src/core/middleware/require-scopes.ts) |
-| `GET /v1/users` | Implemented — [user.routes.ts](src/modules/user/user.routes.ts) |
+| `GET /v1/api/users` | Implemented — [user.routes.ts](src/modules/user/user.routes.ts) |
+| `PUT /v1/api/me/onboarding` | Implemented — [onboarding.routes.ts](src/modules/onboarding/onboarding.routes.ts) |
 | User repository operations (`findById`, `update`, `delete`, `softDelete`, `restore`) | Implemented — [user.repository.ts](src/modules/user/user.repository.ts); user creation is not currently exposed |
 | `UserService.updateUser` / `deleteUser` | Implemented — [user.service.ts](src/modules/user/user.service.ts) |
 | Module barrel [modules/user/index.ts](src/modules/user/index.ts) | Implemented — exports the user module's public surface |
@@ -296,7 +297,7 @@ Order is a correctness requirement, not a style choice. Each layer depends on in
 4. container          everything below needs services
 5. accessLog          MUST follow container (it reads the container's logger)
    ── rateLimit slots in here when it lands (§10) ──
-   ── public routes terminate here: /health, /api/auth/* ──
+   ── public routes terminate here: /health, /v1/api/auth/* ──
 6. requireAuth        per-route, not global
 7. requireScopes      needs principal from requireAuth
    ── route handler ──
@@ -374,9 +375,9 @@ Session tokens arrive by cookie **or** `Authorization: Bearer` — the `bearer()
 - **Roles** answer *what is this person?* They live on the user.
 - The effective permission is the **intersection**.
 
-Today every human gets `scopes: ['*']` and roles gate them. The role vocabulary is closed — a Postgres enum, `USER_ROLES` in [users.ts](src/db/schema/users.ts) — and contains `admin`, `gym_owner`, and `player`; `player` is the default. `role` is declared in Better Auth's `user.additionalFields`, which is what puts it on the session for [auth.ts](src/core/middleware/auth.ts) to read. Public sign-up accepts only `gym_owner` and `player`; `admin` is provisioned through a trusted administrative path and cannot be self-assigned.
+Today every human gets `scopes: ['*']` and roles gate them. The role vocabulary is closed — a Postgres enum, `USER_ROLES` in [users.ts](src/db/schema/users.ts) — and contains `admin`, `gym_owner`, and `player`; `player` is the registration default. `role` is declared in Better Auth's `user.additionalFields`, which is what puts it on the session for [auth.ts](src/core/middleware/auth.ts) to read, but it is not accepted from public sign-up. `PUT /v1/api/me/onboarding` assigns `player` or `gym_owner` once and sets `onboardingCompletedAt`; product routes enforce completion through `requireOnboarding`.
 
-> **Sign-up is self-service and unauthenticated, so anyone can register as `gym_owner`.** Better Auth compiles a literal-array field type to `z.any()`, so the *vocabulary* is enforced by the `databaseHooks.user.create.before` hook in [better-auth.ts](src/auth/better-auth.ts). The same hook rejects `admin` during public sign-up; admin provisioning must use a trusted administrative path. Before `gym_owner` gates anything a player must not reach, gate the claim itself: an invite code, a verification step, or an admin-only promotion route. `Principal.roles` stays plural against the day a user holds more than one.
+> **Gym-owner selection is self-service in this MVP.** Anyone who completes owner onboarding immediately gains owner capabilities and receives an unpublished draft venue. Admin is never self-assigned and must be provisioned through a trusted administrative path. `Principal.roles` stays plural against the day a user holds more than one.
 
 **Resource-level authorization belongs in the service.** Middleware cannot answer *"may this user edit **this** post?"* — that needs the row. Route middleware handles **coarse** access (`requireScopes('users:read')`); **fine-grained** ownership checks live in the service, where the data is.
 
@@ -437,7 +438,7 @@ Limits are policy, declared at the route, never buried in the middleware. Starti
 | Unauthenticated (global) | IP | 60 / minute |
 | Authenticated reads | principal id | 300 / minute |
 | Authenticated writes | principal id | 60 / minute |
-| Auth endpoints (`/api/auth/sign-in`, `/sign-up`, password reset) | IP | 10 / 15 minutes |
+| Auth endpoints (`/v1/api/auth/sign-in`, `/sign-up`, password reset) | IP | 10 / 15 minutes |
 
 Auth endpoints are the ones that matter — they are the credential-stuffing surface, and they sit *outside* `requireAuth`, so IP is the only key available.
 
@@ -534,7 +535,7 @@ Cloudflare Worker types, enables `exactOptionalPropertyTypes`, and keeps
 6. `<thing>.routes.ts` — `createRoute` definitions, `security`, per-route `middleware`, `responses` (**plural** — `response` is silently accepted as a spec extension and then ignored), `errs(...)` for only the errors it can produce.
 7. `index.ts` — the barrel. This is the module's public surface (R4).
 8. `container.ts` — wire repo, then service.
-9. `app.ts` — `app.route('/v1', <thing>Routes)`. **Mounting is what puts routes in `/openapi.json`** — a route defined but never mounted is invisible to both the router and the docs.
+9. `app.ts` — `app.route('/v1/api', <thing>Routes)`. **Mounting is what puts routes in `/openapi.json`** — a route defined but never mounted is invisible to both the router and the docs.
 10. Verify `/docs` renders and `/openapi.json` contains the new paths.
 
 ---
@@ -552,7 +553,7 @@ Deltas and confirmations against the reference architecture. Record decisions wi
 | D5 | `neon-http` driver | Stateless, safe to build per request | Interactive transactions required → WebSocket + pooling |
 | D6 | Throw domain errors; translate at the edge | Services must run without HTTP (P5) | Consider `Result<T,E>` — but decide *now*, migrating is painful |
 | D7 | Modules as vertical slices | Deletable units; one folder per feature | Never |
-| **D8** | **Better Auth owns `/api/auth/*`; its spec is merged into ours at request time** | Hand-written OpenAPI for library routes drifts on every upgrade | Never |
+| **D8** | **Better Auth owns `/v1/api/auth/*`; its spec is merged into ours at request time** | Hand-written OpenAPI for library routes drifts on every upgrade | Never |
 | **D9** | **Auth endpoints are docs-filtered by an explicit allowlist** | ~30 generated endpoints bury the handful the frontend calls. *Docs-only — every route stays live* | An endpoint needs actually disabling → gate it in `auth/routes.ts` |
 | **D10** | **`satisfies` on every OpenAPI example (SC3)** | The one hole in the chain of truth; produced the `avatarUrl`/`image` drift | Never |
 | **D11** | **No reusable variables (S1)** | A file is read once, top to bottom. Scroll-back is the tax every future reader pays | Never |

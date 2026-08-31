@@ -7,6 +7,7 @@ import { containerMiddleware } from '@/core/middleware/container';
 import { errorHandler, notFoundHandler } from '@/core/middleware/error-handler';
 import { authRouter } from '@/auth/routes';
 import { userRoutes } from '@/modules/user';
+import { onboardingRoutes } from '@/modules/onboarding';
 import { corsMiddleware } from '@/core/middleware/cors';
 import {
 	securityHeaders,
@@ -28,15 +29,17 @@ app.use('*', accessLog);
 // ── Unauthenticated ──
 app.get('/', (c) => c.text('Server is running!'));
 app.get('/health', (c) => c.json({ ok: true, ts: Date.now() }));
-app.route('/api/auth', authRouter);
+app.route('/v1/api/auth', authRouter);
 
 // ── Versioned API. Auth is applied per-route, not globally,
 // so individual routes can opt out cleanly. ──
 // Mounting is also what puts these routes in /openapi.json: OpenAPIHono's
 // `.route()` merges the sub-app's openAPIRegistry into the parent's. A route
 // that is defined but never mounted is invisible to both the router and the
-// docs. Path is `/users` inside userRoutes, so this serves /v1/users.
-app.route('/v1', userRoutes);
+// docs. The version-first prefix is `/v1/api`; paths inside feature routers
+// remain resource-relative so they do not duplicate the public prefix.
+app.route('/v1/api', onboardingRoutes);
+app.route('/v1/api', userRoutes);
 
 // ── Documentation ──
 registerOpenApi(app);

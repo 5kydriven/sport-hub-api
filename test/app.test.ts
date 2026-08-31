@@ -20,4 +20,50 @@ describe('root route', () => {
 		expect(response.headers.get('content-type')).toContain('text/plain');
 		expect(await response.text()).toBe('Server is running!');
 	});
+
+	test('publishes version-first API paths in OpenAPI', async () => {
+		const response = await app.request(
+			'http://localhost/openapi.json',
+			{},
+			testEnv,
+		);
+
+		expect(response.status).toBe(200);
+		const document = (await response.json()) as {
+			paths: Record<
+				string,
+				{
+					post?: {
+						requestBody?: {
+							content?: {
+								'application/json'?: {
+									schema?: { properties?: Record<string, unknown> };
+								};
+							};
+						};
+					};
+				}
+			>;
+		};
+		expect(document.paths).toHaveProperty('/v1/api/auth/sign-up/email');
+		expect(document.paths).toHaveProperty('/v1/api/me/onboarding');
+		expect(document.paths).toHaveProperty('/v1/api/users');
+		expect(document.paths).not.toHaveProperty('/api/auth/sign-up/email');
+		expect(document.paths).not.toHaveProperty('/v1/users');
+		expect(
+			document.paths['/v1/api/auth/sign-up/email']?.post?.requestBody
+				?.content?.['application/json']?.schema?.properties,
+		).not.toHaveProperty('role');
+	});
+
+	test('serves sessions only from the version-first auth path', async () => {
+		const [legacy, versionFirst] = await Promise.all([
+			app.request('http://localhost/api/auth/get-session', {}, testEnv),
+			app.request('http://localhost/v1/api/auth/get-session', {}, testEnv),
+		]);
+
+		expect(legacy.status).toBe(404);
+		expect(versionFirst.status).toBe(200);
+		expect(await versionFirst.json()).toBeNull();
+	});
 });
