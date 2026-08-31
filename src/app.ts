@@ -8,6 +8,7 @@ import { errorHandler, notFoundHandler } from '@/core/middleware/error-handler';
 import { authRouter } from '@/auth/routes';
 import { userRoutes } from '@/modules/user';
 import { onboardingRoutes } from '@/modules/onboarding';
+import { venueRoutes } from '@/modules/venue';
 import { corsMiddleware } from '@/core/middleware/cors';
 import {
 	securityHeaders,
@@ -40,6 +41,7 @@ app.route('/v1/api/auth', authRouter);
 // remain resource-relative so they do not duplicate the public prefix.
 app.route('/v1/api', onboardingRoutes);
 app.route('/v1/api', userRoutes);
+app.route('/v1/api', venueRoutes);
 
 // ── Documentation ──
 registerOpenApi(app);

@@ -59,7 +59,7 @@ A venue is the physical sports location listed by a gym owner. A gym owner may m
 | `address` | Required; player-visible address. |
 | `latitude`, `longitude` | Required; used for nearby discovery and map display. |
 | `description` | Required for the MVP; short player-visible summary. |
-| `bookingAdvanceDays` | Required positive whole number; maximum number of calendar days ahead a player may request a slot. |
+| `bookingAdvanceDays` | Required whole number from 1 through 365; maximum number of calendar days ahead a player may request a slot. |
 | At least one court | Required before publication. |
 
 ### Optional fields
@@ -98,8 +98,8 @@ A court is a bookable area within exactly one venue. A venue contains one or mor
 | `venueId` | Required; immutable relationship to the owning venue. |
 | `name` | Required; unique within its venue. |
 | `sport` | Required; one supported sport for this court. |
-| `price` | Required non-negative monetary amount, shown before booking. |
-| `slotDurationMinutes` | Required positive whole number; determines generated fixed slots. |
+| `priceCentavos` | Required non-negative integer PHP centavos, shown before booking. API responses also include fixed `currency: "PHP"`. |
+| `slotDurationMinutes` | Required whole number from 15 through 480; determines generated fixed slots. |
 | Operating schedule | Required before the court has bookable availability. |
 
 ### Court behavior
@@ -109,6 +109,11 @@ A court is a bookable area within exactly one venue. A venue contains one or mor
 - Fixed slots are generated from the court's schedule and slot duration for the selected date.
 - Court availability additionally accounts for active bookings as specified in [the booking flow](../flows/booking.md).
 - A court may be unavailable for booking when it has no schedule or its venue is not published.
+- Courts are active by default. Deactivation prevents future bookable slots once availability is introduced, without deleting the court.
+
+The owner-management API currently supports venue and court drafts only. It does
+not yet expose schedules, publication, discovery, or deletion; a court without a
+schedule has no future bookable slots.
 
 ## Operating schedule and generated slots
 
@@ -146,7 +151,7 @@ Role checks are coarse access control. Ownership checks are required wherever ve
 1. A venue belongs to exactly one gym owner.
 2. A court belongs to exactly one venue.
 3. Court names are unique within a venue.
-4. `slotDurationMinutes` and `bookingAdvanceDays` are positive whole numbers.
+4. `bookingAdvanceDays` is from 1 through 365 and `slotDurationMinutes` is from 15 through 480.
 5. A published venue has all publication-required fields and at least one court.
 6. Only published venues appear in player discovery.
 7. A generated slot is never outside its court's operating schedule.
@@ -156,8 +161,7 @@ Role checks are coarse access control. Ownership checks are required wherever ve
 
 These need a product decision before the implementation contract is finalized:
 
-- Currency and whether a price is per slot, per hour, or both. The MVP currently treats price as the amount shown for a bookable slot.
-- Maximum and minimum slot duration and booking-advance values.
+- Whether price should eventually support currencies beyond PHP. The MVP price is PHP centavos per generated slot.
 - Photo storage provider and file limits.
 - Date-specific closures, holidays, maintenance blocks, and special schedules.
 - Whether an owner can delete a venue or court that has booking history; the safe initial behavior is soft deletion or unpublishing.

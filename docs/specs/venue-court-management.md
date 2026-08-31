@@ -377,7 +377,7 @@ Main Court
 Court A
 ```
 
-Court names only need to be unique within their venue if uniqueness is required by the implementation.
+Court names are unique within their venue. The same name is allowed in a different venue.
 
 ---
 
@@ -398,6 +398,9 @@ Futsal
 ```
 
 For MVP simplicity, each court should represent one primary sport configuration.
+
+The fixed wire enum is `basketball`, `badminton`, `volleyball`, `tennis`, and
+`futsal`.
 
 If a physical court supports multiple sports, the product may later define how that should be represented.
 
@@ -457,6 +460,8 @@ Court 1:
 ```
 
 Price represents the amount expected to be paid at the venue for one generated booking slot.
+It is represented by non-negative integer `priceCentavos`; API responses include
+fixed `currency: "PHP"`.
 
 ---
 
@@ -503,6 +508,9 @@ Examples:
 90 minutes
 120 minutes
 ```
+
+The current API accepts whole minutes from 15 through 480. Venue booking advance
+windows accept whole days from 1 through 365.
 
 Slot generation behavior is defined in:
 
@@ -1061,3 +1069,7 @@ The specification now provides the product rules needed for:
 - Booking
 - Owner management
 - Future domain modeling
+
+The first owner-management API increment implements draft venue and court
+creation, listing, retrieval, editing, and court deactivation. Schedules,
+publication, player discovery, and deletion remain subsequent increments.

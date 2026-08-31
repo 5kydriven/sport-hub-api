@@ -22,6 +22,7 @@ Be honest about this table before planning work against it.
 | Auth (session/bearer via Better Auth), scopes, roles | Implemented — [auth.ts](src/core/middleware/auth.ts), [require-scopes.ts](src/core/middleware/require-scopes.ts) |
 | `GET /v1/api/users` | Implemented — [user.routes.ts](src/modules/user/user.routes.ts) |
 | `PUT /v1/api/me/onboarding` | Implemented — [onboarding.routes.ts](src/modules/onboarding/onboarding.routes.ts) |
+| Owner venue and court management under `/v1/api` | Implemented — [venue.routes.ts](src/modules/venue/venue.routes.ts); schedules, publication, discovery, and deletion remain future modules |
 | User repository operations (`findById`, `update`, `delete`, `softDelete`, `restore`) | Implemented — [user.repository.ts](src/modules/user/user.repository.ts); user creation is not currently exposed |
 | `UserService.updateUser` / `deleteUser` | Implemented — [user.service.ts](src/modules/user/user.service.ts) |
 | Module barrel [modules/user/index.ts](src/modules/user/index.ts) | Implemented — exports the user module's public surface |
