@@ -83,6 +83,10 @@ stateDiagram-v2
 - Owners can view and edit both draft and published venues they manage.
 - Unpublishing prevents new discovery and booking requests. It must not alter existing bookings.
 
+Gym-owner onboarding creates the first venue in `Draft` state using the required
+venue fields except courts. Creating a court and its schedule remains a later
+owner-management step before publication.
+
 ## Court
 
 A court is a bookable area within exactly one venue. A venue contains one or more courts.

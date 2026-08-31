@@ -1,5 +1,6 @@
 import { createApp } from '@/core/http/openapi';
 import { requireAuth } from '@/core/middleware/auth';
+import { requireOnboarding } from '@/core/middleware/require-onboarding';
 import { requireScopes } from '@/core/middleware/require-scopes';
 import { buildLinkHeader } from '@/core/pagination/link-header';
 import {
@@ -50,7 +51,11 @@ const listRoute = createRoute({
 	description:
 		'Supports both cursor (default, stable) and offset (`?page=`) pagination. Prefer cursor for feeds and infinite scroll.',
 	security: [{ bearerAuth: [] }],
-	middleware: [requireAuth, requireScopes('users:read')] as const,
+	middleware: [
+		requireAuth,
+		requireOnboarding,
+		requireScopes('users:read'),
+	] as const,
 	request: {
 		query: ListQuerySchema,
 	},

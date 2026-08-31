@@ -307,6 +307,11 @@ Responsibilities may include:
 
 Authentication credentials remain owned by Better Auth.
 
+New accounts register with credentials first, then complete one protected
+onboarding action. Until onboarding is complete, application APIs are blocked.
+Player onboarding creates a player profile. Gym-owner onboarding creates an
+owner profile and the first venue as an unpublished draft.
+
 ---
 
 # 9. Venue Module
@@ -709,18 +714,19 @@ The application uses versioned HTTP APIs.
 Existing convention:
 
 ```text
-/v1/...
+/v1/api/...
 ```
 
 Possible resource groups:
 
 ```text
-/v1/users
-/v1/venues
-/v1/venues/:venueId/courts
-/v1/courts/:courtId/availability
-/v1/bookings
-/v1/notifications
+/v1/api/users
+/v1/api/me/onboarding
+/v1/api/venues
+/v1/api/venues/:venueId/courts
+/v1/api/courts/:courtId/availability
+/v1/api/bookings
+/v1/api/notifications
 ```
 
 These are conceptual resource boundaries, not finalized endpoint definitions.

@@ -126,29 +126,33 @@ The role determines which protected capabilities are available.
 
 ---
 
-# 5. Registration
+# 5. Registration and Onboarding
 
-The MVP must support separate player and gym-owner registration.
+The MVP registers an account before the user chooses its application role.
+Registration collects only name, email, and password. A successfully
+authenticated account is directed to onboarding and cannot use product APIs
+until it completes one role path.
 
 Conceptually:
 
 ```mermaid
 flowchart TD
     A[Create Account]
-    --> B{Account type}
+    --> B[Authenticated incomplete account]
+    --> C{Choose account type}
 
-    B -->|Player| C[Player Registration]
-    B -->|Gym Owner| D[Gym Owner Registration]
+    C -->|Player| D[Create player profile]
+    C -->|Gym Owner| E[Create owner profile and draft venue]
 
-    C --> E[Player Account Created]
-    D --> F[Gym Owner Account Created]
+    D --> F[Player access]
+    E --> G[Owner access]
 ```
 
 ---
 
 # 6. Player Registration
 
-## AUTH-SPEC-002 — Player Registration
+## AUTH-SPEC-002 — Player Onboarding
 
 A new user must be able to register as a player.
 
@@ -166,7 +170,7 @@ The exact identity fields may be finalized during API design.
 
 ## Player Registration Result
 
-After successful registration:
+After successful player onboarding:
 
 - A player account exists.
 - The account role is `player`.
@@ -179,30 +183,33 @@ Whether the user is automatically authenticated immediately after registration m
 
 # 7. Gym Owner Registration
 
-## AUTH-SPEC-003 — Gym Owner Registration
+## AUTH-SPEC-003 — Gym Owner Onboarding
 
 A new user must be able to register as a gym owner.
 
-Initial fields may include:
+The owner must provide the first venue draft during onboarding:
 
-- Name
-- Email
-- Password
+- Venue name
+- Description
+- Address
+- Latitude and longitude
+- Booking advance days
 
-Additional business information should not be required at registration unless necessary.
-
-Venue information belongs in venue creation rather than authentication.
+Photos, contact information, amenities, courts, and operating schedules remain
+optional at this stage. The venue is created as a draft and cannot be published
+until it satisfies the venue publication rules.
 
 ---
 
 ## Gym Owner Registration Result
 
-After successful registration:
+After successful gym-owner onboarding:
 
 - A gym-owner account exists.
 - The account role is `gym_owner`.
 - A gym-owner profile can be associated with the account.
 - The owner can access venue-management capabilities after authentication.
+- The first venue is an unpublished owner-owned draft.
 
 ---
 
@@ -219,9 +226,9 @@ Register
    ↓
 Account Created
    ↓
-Authenticated Application
+Choose role during onboarding
    ↓
-Create Venue Later
+Use the application
 ```
 
 instead of:
@@ -238,7 +245,8 @@ Configure Schedule
 Finally Create Account
 ```
 
-The latter unnecessarily couples authentication with onboarding.
+Gym-owner onboarding may create a first venue draft because it is an explicit
+owner setup step, not part of credential creation.
 
 ---
 
@@ -573,9 +581,8 @@ The product specification should avoid prescribing implementation-specific passw
 
 # 28. Email Verification
 
-Email verification is not yet established as an MVP requirement.
-
-Possible future behavior:
+Email verification is out of scope for this MVP. Production registration and
+onboarding do not require a verified email. A future release may add:
 
 ```text
 Register
@@ -670,21 +677,14 @@ sequenceDiagram
     actor User
     participant App
     participant Auth
+    participant Onboarding
 
-    User->>App: Choose account type
-    User->>App: Enter registration details
+    User->>App: Enter name, email, password
     App->>Auth: Create account
-
-    Auth->>Auth: Validate details
-    Auth->>Auth: Create role
-
-    alt Registration valid
-        Auth-->>App: Account created
-        App-->>User: Registration successful
-    else Registration invalid
-        Auth-->>App: Validation error
-        App-->>User: Show error
-    end
+    Auth-->>App: Authenticated incomplete account
+    User->>App: Choose role
+    App->>Onboarding: Complete selected role
+    Onboarding-->>App: Profile and optional draft venue created
 ```
 
 ---
@@ -801,22 +801,23 @@ Public self-sign-up cannot grant the `admin` role.
 
 # 37. Acceptance Criteria — Player Registration
 
-- [ ] User can choose/register as a player.
+- [ ] User registers with name, email, and password only.
+- [ ] User can choose player during onboarding.
 - [ ] Required registration data is validated.
 - [ ] Duplicate login identity is rejected.
-- [ ] Successful account receives `player` role.
-- [ ] Player can authenticate after successful registration.
+- [ ] Successful player onboarding receives `player` role.
+- [ ] Incomplete accounts cannot use product APIs.
 
 ---
 
 # 38. Acceptance Criteria — Gym Owner Registration
 
-- [ ] User can choose/register as a gym owner.
+- [ ] User can choose gym owner during onboarding.
 - [ ] Required registration data is validated.
 - [ ] Duplicate login identity is rejected.
-- [ ] Successful account receives `gym_owner` role.
-- [ ] Gym owner can authenticate after successful registration.
-- [ ] Venue creation is not required to create the account.
+- [ ] Successful owner onboarding receives `gym_owner` role.
+- [ ] Owner onboarding creates one unpublished first-venue draft.
+- [ ] Owner can authenticate after successful registration.
 
 ---
 
@@ -900,10 +901,6 @@ or another identifier.
 Email/password is currently the simplest default but is not formally established yet.
 
 ---
-
-## OPEN-AUTH-002 — Email Verification
-
-Determine whether users must verify their email before accessing the application.
 
 ---
 
