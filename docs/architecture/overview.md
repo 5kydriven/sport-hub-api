@@ -328,17 +328,20 @@ Court
 
 Responsibilities:
 
-- Create venue
-- Edit venue
-- Publish/unpublish venue
-- Create court
-- Edit court
-- Activate/deactivate court
+- Create and cursor-list owner venue drafts
+- Retrieve and edit owner-owned venues
+- Create, list, edit, and deactivate owner-owned courts
 - Configure sport
-- Configure price
-- Configure booking advance window
+- Configure non-negative PHP-centavo price and 15–480 minute slot duration
+- Configure a 1–365 day booking advance window
 - Validate ownership
-- Validate publication eligibility
+
+The implemented owner-management surface is version-first: `GET /v1/api/me/venues`,
+`POST /v1/api/venues`, `GET`/`PATCH /v1/api/venues/:venueId`,
+`GET`/`POST /v1/api/venues/:venueId/courts`, and `PATCH /v1/api/courts/:courtId`.
+All require authentication, completed onboarding, and the `gym_owner` role.
+Schedules, publication eligibility, discovery, and deletion remain separate
+increments; every newly created venue is an unpublished draft.
 
 ---
 

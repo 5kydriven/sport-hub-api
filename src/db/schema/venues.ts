@@ -46,8 +46,10 @@ export const venues = pgTable(
 			sql`${table.longitude} >= -180 AND ${table.longitude} <= 180`,
 		),
 		check(
-			'venues_booking_advance_days_positive',
-			sql`${table.bookingAdvanceDays} >= 1`,
+			'venues_booking_advance_days_range',
+			sql`${table.bookingAdvanceDays} >= 1 AND ${table.bookingAdvanceDays} <= 365`,
 		),
 	],
 );
+
+export type VenueRow = typeof venues.$inferSelect;

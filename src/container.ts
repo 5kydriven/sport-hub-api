@@ -5,6 +5,8 @@ import { makeUserRepository } from '@/modules/user/user.repository';
 import { makeUserService } from '@/modules/user/user.service';
 import { makeOnboardingRepository } from '@/modules/onboarding/onboarding.repository';
 import { makeOnboardingService } from '@/modules/onboarding/onboarding.service';
+import { makeVenueRepository } from '@/modules/venue/venue.repository';
+import { makeVenueService } from '@/modules/venue/venue.service';
 // import { makePostRepository } from '@/modules/post/post.repository';
 // import { makePostService } from '@/modules/post/post.service';
 import { createDb } from '@/db/client';
@@ -27,6 +29,7 @@ export function createContainer(raw: RawBindings, ctx: ContainerContext) {
 	// 3. Repositories — depend only on `db`
 	const userRepo = makeUserRepository(db);
 	const onboardingRepo = makeOnboardingRepository(db);
+	const venueRepo = makeVenueRepository(db);
 	// const postRepo = makePostRepository(db);
 	// const apiKeyRepo = makeApiKeyRepository(db);
 	// 4. Services — depend on repositories and each other
@@ -36,6 +39,7 @@ export function createContainer(raw: RawBindings, ctx: ContainerContext) {
 	// });
 	const userService = makeUserService({ userRepo });
 	const onboardingService = makeOnboardingService({ onboardingRepo });
+	const venueService = makeVenueService({ venueRepo });
 	// const postService = makePostService({
 	// 	postRepo,
 	// 	userService, // ← service→service, never service→foreign repo
@@ -53,6 +57,7 @@ export function createContainer(raw: RawBindings, ctx: ContainerContext) {
 		services: {
 			user: userService,
 			onboarding: onboardingService,
+			venue: venueService,
 			// post: postService,
 			// apiKey: apiKeyService,
 		},

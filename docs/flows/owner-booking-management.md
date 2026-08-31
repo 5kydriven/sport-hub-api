@@ -10,10 +10,10 @@ Define how a gym owner manages their venues, courts, availability, and pending b
 flowchart TD
     A[Owner registers or logs in] --> B[Create or select venue]
     B --> C[Enter venue information and location]
-    C --> D[Create court]
-    D --> E[Set sport, price, and operating schedule]
-    E --> F[Set court slot duration]
-    F --> G[Set venue booking advance window]
+    C --> D[Create or edit draft court]
+    D --> E[Set sport, PHP-centavo price, and slot duration]
+    E --> F[Set venue booking advance window]
+    F --> G[Configure operating schedule]
     G --> H[Publish venue]
     H --> I[Venue becomes discoverable]
 ```
@@ -36,8 +36,9 @@ flowchart TD
 ## Rules
 
 - An owner may manage multiple venues; each venue may contain multiple courts.
-- Each court has its own sport, price, operating schedule, and slot duration.
+- Each court has one fixed supported sport (`basketball`, `badminton`, `volleyball`, `tennis`, or `futsal`), a non-negative PHP-centavo price, operating schedule, and slot duration (15–480 minutes).
 - The booking advance window belongs to the venue and applies to all of its courts.
+- Draft venue and court management comes before schedules and publication. Until a schedule is configured in the following increment, a court has no future bookable slots.
 - Owners see and act only on bookings associated with venues they manage.
 - An owner can approve or reject only `pending` bookings.
 - An owner cannot cancel a `confirmed` booking in the MVP.

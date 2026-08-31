@@ -44,12 +44,30 @@ describe('root route', () => {
 					};
 				}
 			>;
+			components?: {
+				schemas?: Record<
+					string,
+					{ properties?: Record<string, { enum?: string[] }> }
+				>;
+			};
 		};
 		expect(document.paths).toHaveProperty('/v1/api/auth/sign-up/email');
 		expect(document.paths).toHaveProperty('/v1/api/me/onboarding');
 		expect(document.paths).toHaveProperty('/v1/api/users');
+		expect(document.paths).toHaveProperty('/v1/api/me/venues');
+		expect(document.paths).toHaveProperty('/v1/api/venues');
+		expect(document.paths).toHaveProperty('/v1/api/venues/{venueId}/courts');
+		expect(document.paths).toHaveProperty('/v1/api/courts/{courtId}');
 		expect(document.paths).not.toHaveProperty('/api/auth/sign-up/email');
 		expect(document.paths).not.toHaveProperty('/v1/users');
+		expect(document.paths).not.toHaveProperty('/v1/venues');
+		expect(document.components?.schemas?.Court?.properties).toMatchObject({
+			priceCentavos: {},
+			currency: { enum: ['PHP'] },
+			sport: {
+				enum: ['basketball', 'badminton', 'volleyball', 'tennis', 'futsal'],
+			},
+		});
 		expect(
 			document.paths['/v1/api/auth/sign-up/email']?.post?.requestBody
 				?.content?.['application/json']?.schema?.properties,
